@@ -9,10 +9,9 @@
    - Follow-up: Why would they use optimistic updates but wait to ask you for more information
 
 **Идеи:**
-- Notion — иногда тормозит на больших документах, offline режим ненадёжный
-- Google Calendar — сложно найти свободное время для группы людей, приходится вручную сравнивать
-- Spotify — рекомендации иногда застревают в одном жанре, сложно "сбросить" алгоритм
-- YouTube — автоплей включает нерелевантные видео, история просмотров влияет на рекомендации слишком сильно
+- I often find that many apps make it hard to find the features I use the most. Important buttons are hidden in menus, and I waste time searching for them.
+
+It would be great if apps had a customizable or automatically generated home screen that shows my frequent actions or recent activity. This would make the experience faster and more personal.
 
 ---
 
@@ -21,10 +20,13 @@
 2. What about a software system that you've had to work with that was difficult - maybe something you owned or something you had to interact with in your job
 
 **Идеи:**
-- Django проект с устаревшей структурой — всё в одном app, circular imports, долго разбираться
-- Сервис биллинга со сложной бизнес-логикой — много edge cases, каждое изменение требовало осторожности
-- Интеграция с внешним API без sandbox — тестировать приходилось аккуратно, документация неполная
-- Система уведомлений с несколькими каналами (email, push, SMS) — сложно дебажить почему не дошло
+I’ve often worked with systems where it’s unclear how to get started. The setup README is outdated or incomplete, so a new engineer has to guess steps or ask around.
+
+Another common issue is that some internal actions — like adding a new role or creating a feature flag — require non-obvious manual steps that aren’t documented anywhere. This slows people down and makes onboarding harder.
+
+I would fix it by creating clear, up-to-date documentation and making it part of the development process.
+
+For internal actions like adding roles or feature flags, I’d either automate them with scripts/tools or document the steps in one place.
 
 ---
 
@@ -32,11 +34,9 @@
    - Follow-up: How would you resolve/fix it if you were going to fix it
 
 **Идеи:**
-- Fat views без сервисного слоя — бизнес-логика размазана по views, тяжело тестировать и переиспользовать
-- Модели с property-методами которые делают запросы в БД — неочевидные N+1, сложно отследить
-- Celery таски без идемпотентности — при retry дублировались emails, пришлось добавлять deduplication
-- Тесты которые зависят от порядка выполнения — падали рандомно на CI, shared state между тестами
+I’ve worked with Django views where everything is in one place — validation, business logic, and database queries all mixed together. It becomes hard to test, maintain, or extend.
 
+To fix it, I’d separate concerns: move business logic into a service layer, keep validation in serializers/forms, and keep data access in managers or repository-style helpers.
 ---
 
 4. What's your favorite project you've ever worked on
@@ -60,9 +60,16 @@
 
 **Идеи:**
 - Django — batteries-included, ORM/admin/auth из коробки, conventions over configuration
-- Celery — distributed task queue для background jobs, интеграция с Django/Flask
-- PostgreSQL — надёжная RDBMS, хорошо знаю индексы, EXPLAIN, оптимизацию запросов
-- Redis — in-memory store для кэша, очередей, sessions, pub/sub
+
+MTV architecture — Models, Templates, Views define data, UI, and request handling.
+
+ORM — lets you work with the database using Python classes instead of raw SQL.
+
+Apps & project structure — every feature is an “app” that stays modular and reusable.
+
+Admin — auto-generated UI for managing data.
+
+Middleware — request/response processing layers.
 
 ---
 
@@ -71,10 +78,11 @@
 6. How has your perspective on engineering changed over the course of your career
 
 **Идеи:**
-- Раньше хотел написать идеальный код, теперь понимаю что важнее доставить value и итерировать
-- Научился ценить простоту — легче поддерживать, легче онбордить новых людей
-- Понял важность тестов не для coverage, а для уверенности при изменениях
-- Стал больше думать о том как код будет читаться через полгода другим человеком
+I used to focus on “perfect code,” now I care more about delivering value and iterating fast.
+
+I learned to prioritize simplicity because it makes onboarding and maintenance easier.
+
+And I now see tests as a safety net for confident changes, not just a coverage metric.
 
 ---
 
@@ -84,10 +92,7 @@
    - Follow-up: (уточнение если кандидат смешивает несколько примеров) These were two separate pieces of feedback, right
 
 **Идеи:**
-- Фидбек что мои PR слишком большие — научился разбивать на smaller chunks
-- Сказали что на code review даю слишком много комментариев сразу — стал приоритизировать главное
-- Менеджер отметил что мало делюсь контекстом с командой — начал писать короткие updates в Slack
-- Коллега сказал что перебиваю на митингах — стал больше слушать и записывать мысли
+I got feedback that I was moving too fast and sometimes skipped small details that later caused minor issues. After that, I started adding an extra self-review step before submitting PRs.
 
 ---
 
@@ -95,10 +100,7 @@
    - Follow-up: What did the metrics tell you (если кандидат упоминает данные/метрики)
 
 **Идеи:**
-- Разное мнение о том как структурировать код — обсудили плюсы/минусы, выбрали вариант вместе
-- Несогласие о приоритете багов vs фич — поговорили с PM, договорились о балансе
-- Коллега хотел быстрый fix, я хотел proper solution — нашли компромисс с TODO и тикетом на рефакторинг
-- Разногласие о naming conventions — вынесли на обсуждение команды, приняли решение голосованием
+I had a conflict once when a new coworker kept adding unrelated changes into his own pull requests, mixing refactoring and small fixes with the main task. It made reviews slow and hard to follow. I talked to him directly and asked to keep PRs focused. He understood after the conversation, and the issue was resolved without escalation.
 
 ---
 
@@ -119,10 +121,13 @@
 10. If you're mentoring an engineer, what things do you make sure that they understand early on
 
 **Идеи:**
-- Не бояться задавать вопросы — лучше спросить рано чем потратить день впустую
-- Как пользоваться git эффективно — branching, rebasing, хорошие commit messages
-- Как читать и понимать существующий код — важнее чем сразу писать новый
-- Важность тестирования своих изменений локально перед PR
+Clarity first — ask questions, confirm assumptions, don’t start coding until the task is fully clear.
+
+Small, focused PRs — easier to review, easier to test, easier to roll back.
+
+Simplicity wins — choose the simplest solution that works before adding abstractions.
+
+Communicate early — surface blockers, risks, or doubts right away, not at the end.
 
 ---
 
@@ -132,10 +137,7 @@
     - Follow-up: (переформулировка) What's an insight that you had recently from reading a book or an article or listening to a podcast, or maybe a conference
 
 **Идеи:**
-- Статья про technical debt — не весь debt плохой, иногда это осознанный trade-off
-- Разговор с senior коллегой — важность документировать не что, а почему было принято решение
-- Книга/блог про code review — фокус на обучении, а не на критике
-- Подкаст про работу в distributed команде — overcommunication лучше чем недосказанность
+A memorable insight I had recently comes from Thinking, Fast and Slow by Daniel Kahneman. It reminded me that we all have two ways of thinking: fast, intuitive decisions and slow, deliberate reasoning. I realized that in engineering and product decisions, it’s easy to rely on intuition, but taking a moment to slow down and think deliberately often prevents mistakes and leads to better outcomes.
 
 ---
 

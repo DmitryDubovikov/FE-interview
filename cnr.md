@@ -697,7 +697,7 @@ service UserService {
 # Базовый URL
 https://api.cloud.example.com/v1
 
-# Ресурсы: instances, volumes, snapshots, security-groups
+# Ресурс: instances
 ```
 
 **Endpoints:**
@@ -709,36 +709,18 @@ Response: {
   "instances": [
     { "id": "i-123", "type": "t2.micro", "state": "running", ... },
     { "id": "i-456", "type": "t2.small", "state": "stopped", ... }
-  ],
-  "pagination": { "next_token": "abc123" }
+  ]
 }
 
 # Получить конкретный инстанс
 GET /instances/i-123
-Response: {
-  "id": "i-123",
-  "type": "t2.micro",
-  "state": "running",
-  "public_ip": "54.123.45.67",
-  "private_ip": "10.0.0.5",
-  "vpc_id": "vpc-789",
-  "security_groups": ["sg-001"],
-  "tags": { "Name": "WebServer", "Environment": "production" }
-}
 
 # Создать новый инстанс
 POST /instances
-Body: {
-  "type": "t2.micro",
-  "ami_id": "ami-12345",
-  "key_name": "my-key",
-  "security_groups": ["sg-001"],
-  "tags": { "Name": "NewServer" }
-}
+Body: { "type": "t2.micro", "ami_id": "ami-12345", "tags": { "Name": "NewServer" } }
 Response: 201 Created
-{ "id": "i-789", "state": "pending", ... }
 
-# Обновить инстанс (например, изменить тип)
+# Обновить инстанс
 PATCH /instances/i-123
 Body: { "type": "t2.small" }
 
@@ -748,46 +730,14 @@ Response: 204 No Content
 
 # Действия над инстансом (actions как sub-resource)
 POST /instances/i-123/actions
-Body: { "action": "start" }
-Response: { "id": "i-123", "state": "pending" }
-
-POST /instances/i-123/actions
-Body: { "action": "stop" }
-
-POST /instances/i-123/actions
-Body: { "action": "reboot" }
-
-# Volumes
-GET /instances/i-123/volumes
-POST /instances/i-123/volumes  # Attach volume
-DELETE /instances/i-123/volumes/vol-001  # Detach
-
-# Security Groups
-GET /security-groups
-POST /security-groups
-GET /security-groups/sg-001
-PUT /security-groups/sg-001/rules  # Update rules
+Body: { "action": "start" }  # или "stop", "reboot"
 ```
 
 **Фильтрация и пагинация:**
 
 ```bash
-# Фильтрация
 GET /instances?state=running&type=t2.micro
-
-# Пагинация
 GET /instances?limit=20&next_token=abc123
-
-# Сортировка
-GET /instances?sort=created_at&order=desc
-```
-
-**Заголовки:**
-
-```http
-Authorization: Bearer <token>
-Content-Type: application/json
-X-Request-Id: uuid-for-tracing
 ```
 
 ---

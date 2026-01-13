@@ -23,24 +23,6 @@ for author in Author.objects.prefetch_related('books'):
     print([b.title for b in author.books.all()])  # Без доп. запросов
 ```
 
-### 2.2. Асинхронность и Django ORM
-```python
-# Django ORM синхронный по своей природе
-# Async views появились, но ORM всё ещё блокирующий
-
-# Плохо — блокирует event loop
-async def my_view(request):
-    users = User.objects.all()  # Синхронный вызов!
-    return JsonResponse({'count': len(users)})
-
-# Хорошо — использование sync_to_async
-from asgiref.sync import sync_to_async
-
-async def my_view(request):
-    users = await sync_to_async(list)(User.objects.all())
-    return JsonResponse({'count': len(users)})
-```
-
 ### 2.3. Сложные запросы и Raw SQL
 ```python
 # Django ORM не всегда выразителен для сложных запросов
@@ -67,27 +49,6 @@ Article.objects.raw('''
     SELECT *, RANK() OVER (PARTITION BY category_id ORDER BY views DESC) as rank
     FROM articles
 ''')
-```
-
-### 2.4. Тестирование с fixtures и factory
-```python
-# Встроенные fixtures в JSON/YAML неудобны и хрупки
-# fixtures/users.json — быстро устаревает при изменении моделей
-
-# Приходится использовать factory_boy или model_bakery
-import factory
-
-class UserFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = User
-
-    username = factory.Sequence(lambda n: f'user_{n}')
-    email = factory.LazyAttribute(lambda o: f'{o.username}@test.com')
-
-# В тестах
-def test_user_creation():
-    user = UserFactory()  # Создаёт реального пользователя
-    user = UserFactory.build()  # Только объект без сохранения
 ```
 
 ---
@@ -185,70 +146,6 @@ def cleanup_article_files(sender, instance, **kwargs):
 
 *Вдохновлено best practices из FastAPI, SQLAlchemy, SQLModel, Pydantic*
 
-### 4.1. Декларативные API endpoints (вдохновлено FastAPI)
-```python
-# Сейчас DRF требует много boilerplate
-# Желаемый API — как в FastAPI, но с Django ORM
-
-from django.api import router, Query, Body
-from pydantic import BaseModel
-
-class ArticleCreate(BaseModel):
-    title: str
-    content: str
-
-class ArticleResponse(BaseModel):
-    id: int
-    title: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True  # Работает с Django моделями
-
-@router.post("/articles/", response_model=ArticleResponse)
-async def create_article(
-    data: ArticleCreate,
-    user: User = Depends(get_current_user)
-):
-    article = await Article.objects.acreate(**data.model_dump(), author=user)
-    return article
-
-@router.get("/articles/")
-async def list_articles(
-    page: int = Query(1, ge=1),
-    limit: int = Query(20, le=100),
-    search: str | None = Query(None)
-):
-    qs = Article.objects.all()
-    if search:
-        qs = qs.filter(title__icontains=search)
-    return [a async for a in qs[(page-1)*limit:page*limit]]
-```
-
-### 4.2. Унифицированные модели (вдохновлено SQLModel)
-```python
-# SQLModel объединяет SQLAlchemy + Pydantic
-# Желаемый API для Django — модель = схема валидации
-
-from django.db import models
-from typing import Annotated
-
-class Article(models.Model):
-    # Одна модель для БД, валидации и сериализации
-    title: Annotated[str, models.CharField(max_length=200)]
-    content: Annotated[str, models.TextField()]
-    views: Annotated[int, models.IntegerField(default=0)]
-    author: Annotated["User", models.ForeignKey('User', on_delete=models.CASCADE)]
-
-    class Meta:
-        # Автогенерация Pydantic схем
-        generate_schemas = True
-
-# Использование
-article = Article(title="Test", content="...")  # Валидация при создании
-article.model_dump()  # Сериализация как в Pydantic
-Article.schema()  # JSON Schema для OpenAPI
-```
 
 ### 4.3. Dependency Injection система (вдохновлено FastAPI)
 ```python
@@ -285,39 +182,4 @@ async def create_article(
 ):
     # user и settings инжектируются автоматически
     ...
-```
-
-### 4.4. Query Builder с type safety (вдохновлено SQLAlchemy 2.0 + Prisma)
-```python
-# Типизированные запросы с автокомплитом IDE
-
-from django.db.query import select, and_, or_
-
-# SQLAlchemy 2.0 style
-stmt = (
-    select(Article)
-    .where(Article.author_id == user.id)
-    .where(Article.published == True)
-    .order_by(Article.created_at.desc())
-    .limit(10)
-)
-articles = await session.execute(stmt)
-
-# Или Prisma-style API
-articles = await Article.prisma.find_many(
-    where={
-        "author_id": user.id,
-        "published": True,
-        "OR": [
-            {"title": {"contains": "Django"}},
-            {"tags": {"some": {"name": "python"}}}
-        ]
-    },
-    include={"author": True, "comments": {"take": 5}},
-    order_by={"created_at": "desc"},
-    take=10
-)
-
-# IDE знает все поля и подсказывает
-# Ошибки типов ловятся до runtime
 ```

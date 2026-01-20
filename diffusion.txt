@@ -1,0 +1,59 @@
+Core Technologies
+
+React 18 + TypeScript 5.5 with Vite 7 as the build tool
+ShadCN/UI component library built on Radix UI primitives
+Tailwind CSS 3.4 for styling
+TanStack Query for server state management
+React Router for client-side routing
+Python 3.11 with FastAPI async web framework
+SQLAlchemy 2.0 ORM with Aurora PostgreSQL 16
+Pydantic for data validation
+Alembic for database migrations
+
+System Components
+1. Main Application (regulatory-copilot-mvp)
+●
+FastAPI backend + React frontend
+●
+Multi-tenant architecture
+●
+Task/document management workflows
+●
+Bulk Upload Automation
+2. Email Retriever (separate repo)
+●
+Automated email processing from Outlook via Microsoft Graph API
+●
+AI-powered file renaming using Google Vertex AI (Gemini)
+●
+Checkpointed processing with PostgreSQL
+3. CRIO Playwright
+●
+Browser automation for CRIO document filing
+●
+Playwright + TypeScript
+●
+Automated folder tree mapping
+AI/ML Integration
+●
+●
+Google Vertex AI (Gemini 2.5 Pro/Flash) for document classification and file renaming
+Google Document AI for document summarization and OCR
+Infrastructure
+●
+●
+●
+●
+AWS: EC2, Aurora PostgreSQL, S3, ECR, EventBridge, SSM
+Docker containerization with Nginx reverse proxy
+SSL/TLS via Let's Encrypt
+Multi-tenant support with per-site Airtable configurations
+Key External Integrations
+●
+●
+●
+●
+Airtable - Primary data store (multi-tenant bases)
+Microsoft Graph - Email retrieval
+CRIO eReg - Regulatory filing system
+Google Cloud - AI/ML services with Workload Identity Federation

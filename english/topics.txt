@@ -1,0 +1,10 @@
+1 Tell me about yourself
+2 Strongest project
+3 Technical problem solved
+4 System design
+5 Daily standup
+6 Technical decisions
+7 Stakeholders / product
+8 Cultural fit
+9 Career goals
+10 Strengths & weaknesses

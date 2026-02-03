@@ -1,0 +1,158 @@
+NerdWallet – Backend Interview Tasks (compiled from Glassdoor reports)
+
+A couple KEY things to know and keep in mind about NerdWallet technical exercises...
+NerdWallet's technical exercises are designed to have conversation/dialogue throughout the exercise. In addition to seeing what you do and how you code, they want to hear your thought process and for you to communicate what you are doing and why you are doing it. 
+These interviews are NOT designed for candidates to simply code in silence; they want it to be a working session where candidates are communicating out loud and explaining what they are doing at a high level.
+They want/expect you to ask questions if clarification is needed. They would rather you ask questions/get clarification rather than jump right in and go down a rabbit hole. In that sense, this is a collaborative exercise where you can ask questions, ask for feedback, provide clarification about your code, etc.
+Keep edge cases in consideration, the goal of their technical exercises is not just about completing the entire thing in the time given, but they want to see/understand how you look at the problems holistically and all the things you are considering when you work on the challenges.
+There may not be enough time to complete all the tasks on the exercise, and that is okay. The goal of the exercise is not to get everything done for the sake of completing the exercise; rather, the purpose is for the client to see how you work and how you approach the tasks just like you normally would if you were doing this as part of your daily job.
+Communicating what you are doing and your thought process as you complete the exercise is KEY to performing well on this interview. With that said, there is a balance to this; you do not have to verbally explain all the little things you are doing, but be sure to talk things out as you go, talk about your approach to the tasks as you go through them, etc.
+
+========================================
+1) JSON Serializer / JSON Encoder
+========================================
+
+Question:
+Write a JSON serializer.
+
+You need to write a function/method that takes any kind of input/object and returns a string with its JSON representation.
+
+Requirements / discussion points:
+- Handle nested structures (objects inside objects, arrays inside objects, etc.)
+- Handle collections/lists/arrays
+- Handle null / None values
+- Handle primitives (numbers, booleans)
+- Handle strings (escaping quotes, special characters)
+- Consider edge cases like empty objects/arrays
+- Consider circular references
+- Do NOT use built‑in JSON libraries
+
+The goal is to produce valid JSON.
+
+You are expected to explain:
+- Your recursive strategy
+- How you detect and handle cycles
+- Time/space complexity
+- How you would test this
+- What assumptions you make about input types
+
+
+========================================
+2) High‑Level Data Processing / ETL System
+========================================
+
+Question:
+Do a high level design for a system that periodically reads data, normalizes it, and updates records.
+
+Design a system that:
+
+- Periodically ingests data from one or more external sources
+- Normalizes/transforms that data into a canonical internal format
+- Updates or upserts records in a database
+
+Topics to cover:
+
+- Scheduler (cron / workers / timers)
+- Ingestion layer
+- Normalization / transformation logic
+- Storage layer
+- Queues or background workers
+- Error handling and retries
+- Idempotency
+- Monitoring and observability
+- Scaling considerations
+
+You should discuss:
+
+- Component boundaries
+- Data flow
+- Failure scenarios
+- How to scale ingestion and processing
+- How to avoid duplicate processing
+- Trade‑offs between batch vs streaming
+
+
+========================================
+3) Task Scheduler Service
+========================================
+
+Question:
+Design and implement a service that schedules tasks to be performed at a particular time.
+
+Clients submit tasks with a timestamp.
+At the scheduled time, the task should execute (for example: enqueue a job, trigger an event, call a worker).
+
+Describe or implement:
+
+- Public APIs (create task, cancel task, list tasks, etc.)
+- Data model / schema
+- Scheduler logic
+- Timing mechanism (priority queue, polling, timers, cron, etc.)
+
+Consider:
+
+- High volume of tasks
+- Persistence of scheduled jobs
+- Worker execution
+- Retries and failures
+- Clock skew
+- Exactly‑once vs at‑least‑once execution
+- Horizontal scaling
+
+Explain:
+
+- Which data structures you use
+- How tasks are ordered by time
+- How you guarantee execution
+- How you recover after crashes
+- How you would test this system
+
+
+========================================
+4) LRU Cache
+========================================
+
+Question:
+Implement a Least Recently Used (LRU) cache.
+
+Build a class/module with:
+
+get(key): returns value if present, otherwise indicates missing
+put(key, value): inserts or updates value for key
+
+Constraints:
+
+- Fixed capacity
+- When full, evict the least recently used item
+- Target O(1) time for get and put
+
+You are expected to explain:
+
+- Choice of data structures (typically hash map + doubly linked list)
+- How ordering is maintained
+- What happens on updates of existing keys
+- Edge cases (capacity = 0, repeated puts, missing keys)
+- Thread safety (at least conceptually)
+- Time and space complexity
+
+Also discuss:
+
+- How you would test it
+- Possible production improvements (TTL, metrics, locking strategy)
+
+
+----------------------------------------
+
+Notes on interview format:
+
+These problems are designed as collaborative exercises.
+You are expected to:
+
+- Ask clarifying questions before coding
+- Think out loud
+- Explain trade‑offs
+- Discuss edge cases
+- Treat it like a real working session, not silent LeetCode
+
+Finishing everything is NOT required.
+Showing reasoning and communication is the main goal.

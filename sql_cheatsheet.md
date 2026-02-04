@@ -326,6 +326,216 @@ GROUP BY user_id, grp
 HAVING COUNT(*) >= 3;  -- серии от 3 дней
 ```
 
+**Сотрудники с зарплатой выше менеджера?**
+```sql
+SELECT e.name as employee, e.salary, m.name as manager, m.salary as manager_salary
+FROM employees e
+JOIN employees m ON e.manager_id = m.id
+WHERE e.salary > m.salary;
+```
+
+**Удалить дубликаты (оставить одну запись)?**
+```sql
+-- PostgreSQL: удаляем все кроме минимального id
+DELETE FROM users
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM users
+    GROUP BY email
+);
+
+-- Или через CTE
+WITH duplicates AS (
+    SELECT id, ROW_NUMBER() OVER (PARTITION BY email ORDER BY id) as rn
+    FROM users
+)
+DELETE FROM users WHERE id IN (SELECT id FROM duplicates WHERE rn > 1);
+```
+
+**Медиана?**
+```sql
+-- PostgreSQL
+SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) as median
+FROM employees;
+
+-- Универсальный способ
+SELECT AVG(salary) as median FROM (
+    SELECT salary FROM (
+        SELECT salary, ROW_NUMBER() OVER (ORDER BY salary) as rn,
+               COUNT(*) OVER () as cnt
+        FROM employees
+    ) sub
+    WHERE rn IN (cnt/2, cnt/2 + 1)  -- для чётного кол-ва берём два средних
+) mid;
+```
+
+**Первая покупка каждого пользователя?**
+```sql
+-- Способ 1: оконная функция
+SELECT * FROM (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at) as rn
+    FROM orders
+) sub WHERE rn = 1;
+
+-- Способ 2: коррелированный подзапрос
+SELECT * FROM orders o1
+WHERE created_at = (
+    SELECT MIN(created_at) FROM orders o2 WHERE o2.user_id = o1.user_id
+);
+
+-- Способ 3: DISTINCT ON (PostgreSQL)
+SELECT DISTINCT ON (user_id) *
+FROM orders
+ORDER BY user_id, created_at;
+```
+
+**Пропуски в последовательности (gaps)?**
+```sql
+-- Найти пропущенные id
+SELECT prev_id + 1 as gap_start, id - 1 as gap_end
+FROM (
+    SELECT id, LAG(id) OVER (ORDER BY id) as prev_id
+    FROM orders
+) sub
+WHERE id - prev_id > 1;
+```
+
+**Retention: вернувшиеся на следующий день?**
+```sql
+SELECT
+    t1.login_date,
+    COUNT(DISTINCT t1.user_id) as day_users,
+    COUNT(DISTINCT t2.user_id) as retained_users,
+    ROUND(100.0 * COUNT(DISTINCT t2.user_id) / COUNT(DISTINCT t1.user_id), 2) as retention_rate
+FROM logins t1
+LEFT JOIN logins t2 ON t1.user_id = t2.user_id
+    AND t2.login_date = t1.login_date + INTERVAL '1 day'
+GROUP BY t1.login_date;
+```
+
+**Пользователи с покупками каждый месяц года?**
+```sql
+SELECT user_id
+FROM orders
+WHERE EXTRACT(YEAR FROM created_at) = 2024
+GROUP BY user_id
+HAVING COUNT(DISTINCT EXTRACT(MONTH FROM created_at)) = 12;
+```
+
+**Товары, которые покупали вместе?**
+```sql
+SELECT o1.product_id as product_1, o2.product_id as product_2, COUNT(*) as times_bought_together
+FROM order_items o1
+JOIN order_items o2 ON o1.order_id = o2.order_id AND o1.product_id < o2.product_id
+GROUP BY o1.product_id, o2.product_id
+ORDER BY times_bought_together DESC
+LIMIT 10;
+```
+
+**Cumulative percentage (доля от общего)?**
+```sql
+SELECT
+    category,
+    revenue,
+    SUM(revenue) OVER (ORDER BY revenue DESC) as cumulative,
+    ROUND(100.0 * SUM(revenue) OVER (ORDER BY revenue DESC) / SUM(revenue) OVER (), 2) as cumulative_pct
+FROM category_sales;
+```
+
+**Пересечение диапазонов дат (конфликты бронирований)?**
+```sql
+SELECT a.id, b.id, a.start_date, a.end_date, b.start_date, b.end_date
+FROM bookings a
+JOIN bookings b ON a.id < b.id
+    AND a.room_id = b.room_id
+    AND a.start_date < b.end_date
+    AND a.end_date > b.start_date;  -- условие пересечения
+```
+
+**Active users (DAU/MAU)?**
+```sql
+-- DAU
+SELECT login_date, COUNT(DISTINCT user_id) as dau
+FROM logins
+GROUP BY login_date;
+
+-- MAU
+SELECT DATE_TRUNC('month', login_date) as month, COUNT(DISTINCT user_id) as mau
+FROM logins
+GROUP BY 1;
+
+-- DAU/MAU ratio (stickiness)
+WITH dau AS (
+    SELECT login_date, COUNT(DISTINCT user_id) as daily_users
+    FROM logins GROUP BY 1
+),
+mau AS (
+    SELECT DATE_TRUNC('month', login_date) as month, COUNT(DISTINCT user_id) as monthly_users
+    FROM logins GROUP BY 1
+)
+SELECT d.login_date, d.daily_users, m.monthly_users,
+    ROUND(100.0 * d.daily_users / m.monthly_users, 2) as stickiness
+FROM dau d
+JOIN mau m ON DATE_TRUNC('month', d.login_date) = m.month;
+```
+
+**Процентили по группам?**
+```sql
+SELECT department, salary,
+    NTILE(4) OVER (PARTITION BY department ORDER BY salary) as quartile,
+    PERCENT_RANK() OVER (PARTITION BY department ORDER BY salary) as percentile
+FROM employees;
+```
+
+**MoM (Month-over-Month) рост?**
+```sql
+WITH monthly AS (
+    SELECT DATE_TRUNC('month', date) as month, SUM(revenue) as revenue
+    FROM sales GROUP BY 1
+)
+SELECT month, revenue,
+    LAG(revenue) OVER (ORDER BY month) as prev_month,
+    ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY month)) /
+          LAG(revenue) OVER (ORDER BY month), 2) as mom_growth_pct
+FROM monthly;
+```
+
+**Найти "острова" (группы подряд идущих значений)?**
+```sql
+-- Найти периоды когда сервер был down (status = 'down')
+SELECT MIN(check_time) as down_start, MAX(check_time) as down_end, COUNT(*) as duration
+FROM (
+    SELECT check_time, status,
+        ROW_NUMBER() OVER (ORDER BY check_time) -
+        ROW_NUMBER() OVER (PARTITION BY status ORDER BY check_time) as grp
+    FROM server_status
+) sub
+WHERE status = 'down'
+GROUP BY grp;
+```
+
+**Второй максимум без оконных функций?**
+```sql
+-- Способ 1: подзапрос
+SELECT MAX(salary) FROM employees
+WHERE salary < (SELECT MAX(salary) FROM employees);
+
+-- Способ 2: LIMIT OFFSET
+SELECT DISTINCT salary FROM employees ORDER BY salary DESC LIMIT 1 OFFSET 1;
+
+-- Способ 3: NOT IN
+SELECT MAX(salary) FROM employees
+WHERE salary NOT IN (SELECT MAX(salary) FROM employees);
+```
+
+**Разница между текущей и следующей записью?**
+```sql
+SELECT id, value,
+    LEAD(value) OVER (ORDER BY id) - value as diff_to_next,
+    value - LAG(value) OVER (ORDER BY id) as diff_from_prev
+FROM measurements;
+```
+
 ---
 
 ## Производительность
